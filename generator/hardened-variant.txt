@@ -1,0 +1,41 @@
+def generate_variant(source_path: str, output_dir: str, variant: str, color: str):
+    print(f"Generating {variant} variant…")
+
+    # --- VALIDATION ---------------------------------------------------------
+
+    # Check source file exists
+    if not os.path.isfile(source_path):
+        raise FileNotFoundError(
+            f"[{variant}] Source image not found: {source_path}"
+        )
+
+    # Check source file is readable
+    if not os.access(source_path, os.R_OK):
+        raise PermissionError(
+            f"[{variant}] Source image is not readable: {source_path}"
+        )
+
+    # Ensure output directory exists and is writable
+    os.makedirs(output_dir, exist_ok=True)
+    if not os.access(output_dir, os.W_OK):
+        raise PermissionError(
+            f"[{variant}] Output directory is not writable: {output_dir}"
+        )
+
+    # --- GENERATION ---------------------------------------------------------
+
+    try:
+        with Favicons(source_path, output_dir) as fav:
+            fav.generate()
+    except Exception as e:
+        raise RuntimeError(
+            f"[{variant}] Favicon generation failed: {e}"
+        )
+
+    # --- METADATA -----------------------------------------------------------
+
+    write_html_snippet(output_dir, variant)
+    write_manifest(output_dir, variant, color)
+    write_browserconfig(output_dir, variant, color)
+
+    print(f"✔ Completed {variant} variant → {output_dir}\n")
